@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>English Learning Helper</title>
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    background-color: #000;
+    color: #fff;
+    overflow: hidden;
+    touch-action: pan-y;
+}
+
+/* Screen Layout */
+.screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    margin: 0;
+    transition: transform 0.3s ease;
+    background-color: #000;
+
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Slide Screens */
+#inputScreen {
+    transform: translateX(0);
+}
+
+#inputScreen.hidden {
+    transform: translateX(-100%);
+}
+
+#outputScreen {
+    transform: translateX(100%);
+}
+
+#outputScreen.active {
+    transform: translateX(0);
+}
+
+h1 {
+    color: #fff;
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 24px;
+}
+
+/* TEXTAREA */
+textarea {
+    flex: 1;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 0;
+    background-color: #000;
+    color: #fff;
+    font-size: 18px;
+    resize: none;
+    outline: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* OUTPUT BOX WRAPPER */
+.outputBox {
+    flex: 1;
+    width: 100%;
+    border: 2px solid #222;
+    background-color: #000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* OUTPUT AREA */
+.output {
+    flex: 1;
+    padding: 15px;
+    font-size: 18px;
+    line-height: 1.8;
+    overflow-y: auto;
+    overflow-x: auto;
+    white-space: pre-wrap; /* AS IT IS */
+    word-break: break-word;
+    -webkit-overflow-scrolling: touch;
+
+    font-family: 'Rubik', sans-serif;
+    font-weight: 700;
+}
+
+/* Controls are now NOT overlaying output */
+.controls {
+    width: 100%;
+    padding: 10px;
+    background-color: #111;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    z-index: 1001;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+}
+
+/* Buttons */
+button {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+button:active {
+    background-color: #1557b0;
+    transform: scale(0.98);
+}
+
+#backButton {
+    background-color: #333;
+}
+
+/* Word highlight */
+.word {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin: 0 1px;
+    line-height: 1.6;
+}
+
+.word.highlighted {
+    background-color: rgba(144, 238, 144, 0.5);
+    color: #000;
+    font-weight: 700;
+}
+
+/* Definition Popup */
+.definition {
+    position: fixed;
+    bottom: 80px;
+    left: 10px;
+    right: 10px;
+    background-color: #98fb98;
+    color: #000;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 2000;
+    display: none;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1.4;
+    max-height: 40vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 2px solid #76c776;
+    box-sizing: border-box;
+    word-break: break-word;
+}
+
+@media (min-width: 768px) {
+    .definition {
+        max-width: 600px;
+        margin: 0 auto;
+        left: 50%;
+        transform: translateX(-50%);
+        right: auto;
+    }
+}
+</style>
+</head>
+<body>
+    <!-- Input Screen -->
+    <div id="inputScreen" class="screen">
+        <h1>English Learning Helper</h1>
+        <p style="margin-bottom: 15px; color: #aaa; text-align: center;">Paste your English text below</p>
+        <textarea id="inputText" placeholder="Type or paste your text here..."></textarea>
+        <div class="controls">
+            <button id="processButton">Find Word Meanings</button>
+        </div>
+    </div>
+
+    <!-- Output Screen -->
+    <div id="outputScreen" class="screen">
+        <h1>Word Meanings</h1>
+        <div class="outputBox">
+            <div id="output" class="output"></div>
+        </div>
+        <div class="controls">
+            <button id="backButton">Back to Text</button>
+            <button id="newTextButton">New Text</button>
+        </div>
+    </div>
+
+    <!-- Definition Popup -->
+    <div id="definitionPopup" class="definition"></div>
+
+    <script>
+        // Dictionary API endpoint
+        const DICTIONARY_API = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
+        const wordCache = new Map();
+        let currentWordElement = null;
+
+        // DOM Elements
+        const inputScreen = document.getElementById('inputScreen');
+        const outputScreen = document.getElementById('outputScreen');
+        const processButton = document.getElementById('processButton');
+        const backButton = document.getElementById('backButton');
+        const newTextButton = document.getElementById('newTextButton');
+        const inputText = document.getElementById('inputText');
+        const output = document.getElementById('output');
+        const definitionPopup = document.getElementById('definitionPopup');
+
+        // Event Listeners
+        processButton.addEventListener('click', processText);
+        backButton.addEventListener('click', () => toggleScreens(false));
+        newTextButton.addEventListener('click', () => {
+            inputText.value = '';
+            toggleScreens(false);
+        });
+
+        // Toggle between input and output screens
+        function toggleScreens(showOutput) {
+            if (showOutput) {
+                inputScreen.classList.add('hidden');
+                outputScreen.classList.add('active');
+            } else {
+                inputScreen.classList.remove('hidden');
+                outputScreen.classList.remove('active');
+            }
+            hideDefinition();
+        }
+
+        // Show definition popup
+        function showDefinition(word, definition, element) {
+            // Hide any currently shown definition
+            hideDefinition();
+            
+            // Highlight the clicked word
+            currentWordElement = element;
+            currentWordElement.classList.add('highlighted');
+            
+            // Set the definition text
+            definitionPopup.textContent = definition || 'Definition not found';
+            definitionPopup.style.display = 'block';
+            
+            // Position the popup above the word
+            const wordRect = element.getBoundingClientRect();
+            const popupHeight = definitionPopup.offsetHeight;
+            const spaceAbove = wordRect.top - 20; // Space above the word
+            
+            if (spaceAbove > popupHeight + 20) {
+                // Position above the word if there's enough space
+                definitionPopup.style.top = 'auto';
+                definitionPopup.style.bottom = `${window.innerHeight - wordRect.top + 15}px`;
+            } else {
+                // Otherwise position at the bottom
+                definitionPopup.style.top = 'auto';
+                definitionPopup.style.bottom = '90px';
+            }
+            
+            // Center the popup relative to the word
+            const popupWidth = definitionPopup.offsetWidth;
+            const wordCenter = wordRect.left + (wordRect.width / 2);
+            let leftPos = wordCenter - (popupWidth / 2);
+            
+            // Keep popup within viewport
+            leftPos = Math.max(20, Math.min(leftPos, window.innerWidth - popupWidth - 20));
+            
+            definitionPopup.style.left = `${leftPos}px`;
+            definitionPopup.style.right = 'auto';
+        }
+
+        // Hide definition popup
+        function hideDefinition() {
+            if (currentWordElement) {
+                currentWordElement.classList.remove('highlighted');
+                currentWordElement = null;
+            }
+            definitionPopup.style.display = 'none';
+        }
+
+        // Close popup when clicking outside
+        document.addEventListener('click', (e) => {
+            const isWord = e.target.classList.contains('word');
+            const isPopup = e.target === definitionPopup || definitionPopup.contains(e.target);
+            
+            if (!isWord && !isPopup) {
+                hideDefinition();
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (currentWordElement && definitionPopup.style.display === 'block') {
+                const wordRect = currentWordElement.getBoundingClientRect();
+                const popupHeight = definitionPopup.offsetHeight;
+                const spaceAbove = wordRect.top - 20;
+                
+                if (spaceAbove > popupHeight + 20) {
+                    definitionPopup.style.bottom = `${window.innerHeight - wordRect.top + 15}px`;
+                } else {
+                    definitionPopup.style.bottom = '90px';
+                }
+                
+                const popupWidth = definitionPopup.offsetWidth;
+                const wordCenter = wordRect.left + (wordRect.width / 2);
+                let leftPos = wordCenter - (popupWidth / 2);
+                leftPos = Math.max(20, Math.min(leftPos, window.innerWidth - popupWidth - 20));
+                definitionPopup.style.left = `${leftPos}px`;
+            }
+        });
+
+        // Get word definition from API or cache
+        async function getWordDefinition(word) {
+            const lowerWord = word.toLowerCase();
+            
+            // Check cache first
+            if (wordCache.has(lowerWord)) {
+                return wordCache.get(lowerWord);
+            }
+            
+            try {
+                // Add a small delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                const response = await fetch(`${DICTIONARY_API}${encodeURIComponent(lowerWord)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Handle the API response format
+                if (!Array.isArray(data) || data.length === 0) {
+                    throw new Error('No definitions found');
+                }
+                
+                // Try to get the first definition
+                const firstMeaning = data[0]?.meanings?.[0];
+                if (!firstMeaning) {
+                    throw new Error('No meanings found');
+                }
+                
+                const firstDefinition = firstMeaning.definitions?.[0]?.definition;
+                if (!firstDefinition) {
+                    throw new Error('No definition text found');
+                }
+                
+                // Cache the result
+                wordCache.set(lowerWord, firstDefinition);
+                return firstDefinition;
+                
+            } catch (error) {
+                console.error('Error fetching definition for word:', word, error);
+                throw error; // Re-throw to be handled by the caller
+            }
+        }
+
+        // Process the input text
+        async function processText() {
+            const text = inputText.value;
+            if (!text.trim()) {
+                alert('Please enter some text first');
+                return;
+            }
+
+            // Show loading state
+            output.innerHTML = 'Processing...';
+            toggleScreens(true);
+
+            try {
+                // Clear the output
+                output.innerHTML = '';
+                
+                // Split text into words and non-words (punctuation, spaces, etc.)
+                const tokens = text.match(/\b\w+\b|\s+|\S/g) || [];
+                const fragment = document.createDocumentFragment();
+                
+                for (const token of tokens) {
+                    if (!token.trim()) {
+                        fragment.appendChild(document.createTextNode(token));
+                        continue;
+                    }
+                    
+                    // Check if it's a word (contains letters)
+                    if (/\w+/.test(token)) {
+                        const wordElement = document.createElement('span');
+                        wordElement.textContent = token;
+                        
+                        // Only make words longer than 3 characters clickable
+                        if (token.length > 3) {
+                            wordElement.className = 'word';
+                            
+                            // Add click event to show definition
+                            wordElement.addEventListener('click', async (e) => {
+                                e.stopPropagation();
+                                
+                                // Toggle highlight
+                                if (currentWordElement === wordElement) {
+                                    hideDefinition();
+                                    return;
+                                }
+                                
+                                // Show loading
+                                showDefinition(token, 'Loading...', wordElement);
+                                
+                                try {
+                                    const definition = await getWordDefinition(token);
+                                    showDefinition(token, definition, wordElement);
+                                } catch (error) {
+                                    showDefinition(token, 'No definition found', wordElement);
+                                }
+                            });
+                        }
+                        
+                        fragment.appendChild(wordElement);
+                    } else {
+                        // Add non-word tokens as text nodes
+                        fragment.appendChild(document.createTextNode(token));
+                    }
+                }
+                
+                // Update the output with the processed text
+                output.innerHTML = '';
+                output.appendChild(fragment);
+                
+            } catch (error) {
+                console.error('Error processing text:', error);
+                output.textContent = 'An error occurred while processing the text.';
+            }
+        }
+
+        // Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    // Only prevent default touch behavior for non-scrolling elements
+    document.addEventListener('touchmove', (e) => {
+        // Allow touch move on scrollable elements
+        const scrollable = e.target.closest('.output, .definition, textarea');
+        if (!scrollable) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+});
+    </script>
+</body>
+</html>
