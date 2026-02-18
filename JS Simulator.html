@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>JS Console Simulator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      height: 100%;
+      width: 100%;
+      font-family: sans-serif;
+    }
+
+    #editorView {
+      display: flex;
+      flex-direction: column;
+      background-color: #f0f0f0;
+      height: 100%;
+      padding-bottom: 60px;
+    }
+
+    textarea {
+      flex: 1;
+      width: 100%;
+      font-size: 16px;
+      padding: 10px;
+      resize: none;
+      border: none;
+      outline: none;
+      font-family: monospace;
+      height: 150px;
+    }
+
+    #console {
+      background: #111;
+      color: #0f0;
+      padding: 10px;
+      height: 150px;
+      overflow-y: auto;
+      font-family: monospace;
+      margin-top: 10px;
+    }
+
+    .fixed-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      font-size: 16px;
+      background-color: green;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="editorView">
+    <textarea id="code">
+
+    </textarea>
+
+    <div id="console"></div>
+    <button class="fixed-btn" onclick="runCode()">Run Code</button>
+  </div>
+
+  <script>
+    // Save original console.log
+    const realLog = console.log;
+
+    function runCode() {
+      const consoleDiv = document.getElementById('console');
+      consoleDiv.innerHTML = ""; // Clear previous output
+
+      // Reset console.log each time
+      console.log = function(...args) {
+        const output = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+        consoleDiv.innerHTML += output + '<br>';
+        realLog.apply(console, args);
+      };
+
+      let code = document.getElementById('code').value;
+
+      try {
+        new Function(code)(); // Run user code safely
+      } catch (e) {
+        console.log("Error: " + e.message);
+      }
+    }
+  </script>
+
+</body>
+</html>

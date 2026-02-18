@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>File Extension Renamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input, button { margin: 10px 0; padding: 10px; font-size: 16px; width: 100%; }
+    #fileName { font-weight: bold; margin-top: 10px; word-break: break-all; }
+  </style>
+</head>
+<body>
+
+  <h2>File Extension Renamer</h2>
+
+  <input type="file" id="fileInput" />
+  <div id="fileName">No file selected</div>
+
+  <label>New Extension (e.g. html, js, txt):</label>
+  <input type="text" id="newExt" placeholder="Enter new extension (without dot)" />
+
+  <button onclick="renameAndDownload()">Rename & Download</button>
+
+  <script>
+    let selectedFile = null;
+
+    document.getElementById("fileInput").addEventListener("change", function(event) {
+      selectedFile = event.target.files[0];
+      if (selectedFile) {
+        document.getElementById("fileName").innerText = "Selected: " + selectedFile.name;
+      } else {
+        document.getElementById("fileName").innerText = "No file selected";
+      }
+    });
+
+    function renameAndDownload() {
+      if (!selectedFile) {
+        alert("Please select a file first.");
+        return;
+      }
+
+      const newExt = document.getElementById("newExt").value.trim();
+      if (!newExt) {
+        alert("Please enter a new extension.");
+        return;
+      }
+
+      const originalName = selectedFile.name;
+      let baseName = originalName;
+
+      // Remove the last extension if present
+      if (originalName.lastIndexOf('.') !== -1) {
+        baseName = originalName.substring(0, originalName.lastIndexOf('.'));
+      }
+
+      const newFileName = baseName + '.' + newExt;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const blob = new Blob([e.target.result], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = newFileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+      reader.readAsArrayBuffer(selectedFile);
+    }
+  </script>
+
+</body>
+</html>

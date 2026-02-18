@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Text to HTML Converter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    textarea { width: 100%; height: 150px; margin-bottom: 10px; font-family: monospace; }
+    iframe { width: 100%; height: 200px; border: 1px solid #ccc; margin-top: 10px; }
+    button { padding: 10px 20px; margin-right: 10px; }
+  </style>
+</head>
+<body>
+
+  <h2>Text to HTML Converter</h2>
+
+  <textarea id="textInput" placeholder="Type your HTML here...">
+
+  </textarea>
+
+  <br>
+  <button onclick="updatePreview()">Preview</button>
+  <button onclick="downloadHTML()">Download</button>
+
+  <h3>Live Preview:</h3>
+  <iframe id="preview"></iframe>
+
+  <script>
+    function updatePreview() {
+      const code = document.getElementById('textInput').value;
+      document.getElementById('preview').srcdoc = code;
+    }
+
+    function downloadHTML() {
+      const code = document.getElementById('textInput').value;
+      const blob = new Blob([code], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'converted.html';
+      a.click();
+
+      URL.revokeObjectURL(url);
+    }
+
+    // Load preview on page load
+    window.onload = updatePreview;
+  </script>
+
+</body>
+</html>
